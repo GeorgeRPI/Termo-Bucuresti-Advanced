@@ -4,7 +4,7 @@ from homeassistant.const import Platform
 DOMAIN = "termo_bucuresti"
 PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR]
 
-# Configuration keys
+# Chei de configurare
 CONF_STRADA = "strada"
 CONF_PUNCT_TERMIC = "punct_termic"
 CONF_SECTOR = "sector"
@@ -12,7 +12,7 @@ CONF_UPDATE_INTERVAL = "update_interval"
 CONF_NOTIFICARI = "notificari"
 CONF_DEBUG_MODE = "debug_mode"
 
-# Default values
+# Valori implicite
 DEFAULT_UPDATE_INTERVAL = 15
 DEFAULT_NOTIFICARI = True
 DEFAULT_DEBUG_MODE = False
