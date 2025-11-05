@@ -3,7 +3,7 @@
 ```markdown
 ---
 name: Termo Bucuresti Advanced
-description: Monitorizare avansată a întreruperilor la apă caldă și căldură
+description: Monitorizare a întreruperilor de apă caldă și căldură in Bucuresti
 content_in_root: false
 hide_default_branch: true
 ---
