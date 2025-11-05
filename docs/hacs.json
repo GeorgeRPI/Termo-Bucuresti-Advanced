@@ -1,7 +1,0 @@
-{
-  "name": "Termoenergetica București",
-  "render_readme": true,
-  "domains": ["sensor"],
-  "homeassistant": "2023.8.0",
-  "iot_class": "Cloud Polling"
-}
