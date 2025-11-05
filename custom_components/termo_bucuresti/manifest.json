@@ -1,0 +1,11 @@
+{
+  "domain": "termo_bucuresti",
+  "name": "Termo Bucuresti",
+  "version": "1.0.0",
+  "config_flow": true,
+  "dependencies": [],
+  "codeowners": ["@George"],
+  "documentation": "https://github.com/GeorgeRPI/termo_bucuresti_homeassistant",
+  "integration_type": "service",
+  "iot_class": "cloud_polling"
+}
