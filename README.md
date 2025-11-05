@@ -43,8 +43,8 @@ cards:
 
 ## Notificare la Întrerupere
 alias: "Notificare întrerupere termică"
-   trigger:
-  platform: state
+-trigger:
+  -platform: state
   entity_id: binary_sensor.termo_alerta_generala_strada
   to: "on"
 action:
