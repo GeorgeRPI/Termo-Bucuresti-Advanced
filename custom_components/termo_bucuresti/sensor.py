@@ -1,191 +1,313 @@
-"""Sensor platform pentru CMTEB."""
-import logging
-import asyncio
-from datetime import timedelta
-from bs4 import BeautifulSoup
-import re
-
+"""Sensors for Termo Bucuresti."""
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import CONF_NAME
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util import dt as dt_util
+from .const import DOMAIN, CONF_STRADA, URL_CMTEB
 
-from .const import DOMAIN, CONF_STREET, CONF_PUNCT_TERMIC, BASE_URL, SCAN_INTERVAL
+import asyncio
+import logging
+import re
+from datetime import datetime
+from typing import Dict, List, Any, Optional
 
 _LOGGER = logging.getLogger(__name__)
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Setare senzori din config entry."""
-    street = config_entry.data[CONF_STREET]
-    punct_termic = config_entry.data[CONF_PUNCT_TERMIC]
-    
-    api = CMTEBData(hass, street, punct_termic)
-    
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up sensors."""
     sensors = [
-        CMTEBStatusSensor(api, street, punct_termic, "stare_apa_calda", "Stare Apă Caldă"),
-        CMTEBStatusSensor(api, street, punct_termic, "stare_caldura", "Stare Căldură"),
-        CMTEBSensor(api, street, punct_termic, "cauza", "Cauză Intervenție"),
-        CMTEBSensor(api, street, punct_termic, "descriere", "Descriere Intervenție"),
-        CMTEBSensor(api, street, punct_termic, "data_estimare", "Dată Estimare Reparație")
+        TermoApaCaldaSensor(entry),
+        TermoCalduraSensor(entry),
+        TermoStatusGeneralSensor(entry),
+        TermoCauzaSensor(entry),
+        TermoDataEstimataSensor(entry),
     ]
     
-    async_add_entities(sensors, update_before_add=True)
+    async_add_entities(sensors, True)
 
-class CMTEBData:
-    """Clasă pentru obținerea datelor de la CMTEB."""
+class TermoBaseSensor(SensorEntity):
+    """Base sensor class with advanced parsing."""
     
-    def __init__(self, hass, street, punct_termic):
-        """Initialize."""
-        self.hass = hass
-        self.street = street
-        self.punct_termic = punct_termic
-        self.data = {}
+    def __init__(self, entry: ConfigEntry):
+        self._entry = entry
+        self._session = None
+        self._last_update = None
+        self._attr_available = True
+        self._interruption_data = {}
 
-    @Throttle(timedelta(seconds=SCAN_INTERVAL))
     async def async_update(self):
-        """Actualizare date de la CMTEB."""
+        """Update sensor with advanced parsing."""
         try:
-            session = async_get_clientsession(self.hass)
-            async with session.get(BASE_URL, timeout=30) as response:
+            if not self._session:
+                self._session = async_get_clientsession(self.hass)
+            
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+            
+            async with self._session.get(URL_CMTEB, headers=headers, timeout=30) as response:
                 if response.status == 200:
                     html = await response.text()
-                    await self._parse_html(html)
+                    self._interruption_data = await self._parse_interruption_data(html)
+                    await self._update_sensor_state()
+                    self._last_update = dt_util.now()
                 else:
-                    _LOGGER.error("Eroare la conectarea la CMTEB: %s", response.status)
+                    self._attr_available = False
+                    
         except Exception as e:
-            _LOGGER.error("Eroare la actualizarea datelor CMTEB: %s", e)
+            _LOGGER.error("Eroare la actualizare: %s", e)
+            self._attr_available = False
 
-    async def _parse_html(self, html):
-        """Parsare HTML pentru extragerea datelor."""
-        soup = BeautifulSoup(html, 'html.parser')
+    async def _parse_interruption_data(self, html: str) -> Dict[str, Any]:
+        """Parse interruption data from CMTEB website with advanced detection."""
+        strada_cautata = self._entry.data[CONF_STRADA].lower()
+        interruptions = []
         
-        # Inițializare date
-        self.data = {
-            "stare_apa_calda": "Necunoscut",
-            "stare_caldura": "Necunoscut", 
-            "cauza": "N/A",
-            "descriere": "N/A",
-            "data_estimare": "N/A"
+        # Modele pentru diferite tipuri de întreruperi
+        patterns = {
+            'zona': r'(?:zona|sector|cartier|strada)[\s\S]{1,100}?' + re.escape(strada_cautata),
+            'serviciu': r'(?:apă caldă|căldură|încălzire|serviciu termic)',
+            'cauza': r'(?:cauză|motiv|datorită)[:\s]*([^\.]+)',
+            'data_estimata': r'(?:estimat|programat|până)[\s\S]{1,50}?\d{1,2}[\.\/]\d{1,2}[\.\/]\d{4}',
+            'ora_estimata': r'(?:ora|la)[\s]*(\d{1,2}:\d{2})'
         }
         
-        try:
-            # Căutare toate tabelele sau div-urile care conțin informații
-            tables = soup.find_all('table')
-            divs = soup.find_all('div', class_=True)
+        # Împărțiți HTML-ul în secțiuni care ar putea conține informații despre întreruperi
+        sections = re.split(r'</?div|</?tr|</?p|</?li', html)
+        
+        for section in sections:
+            section_lower = section.lower()
             
-            # Combină toate elementele potențial relevante
-            elements_to_check = tables + divs
-            
-            for element in elements_to_check:
-                element_text = element.get_text().lower()
+            # Verificați dacă secțiunea conține numele străzii și cuvintele cheie pentru servicii
+            if (strada_cautata in section_lower and 
+                any(keyword in section_lower for keyword in ['apă', 'caldă', 'căldură', 'termic'])):
                 
-                # Verifică dacă elementul conține referințe la strada noastră
-                if self.street.lower() in element_text or self.punct_termic.lower() in element_text:
-                    _LOGGER.debug("Am găsit element relevant pentru %s", self.street)
-                    
-                    # Încearcă să extragi informații din tabele
-                    if element.name == 'table':
-                        rows = element.find_all('tr')
-                        for row in rows:
-                            cells = row.find_all(['td', 'th'])
-                            if len(cells) >= 2:
-                                header = cells[0].get_text().strip().lower()
-                                value = cells[1].get_text().strip()
-                                
-                                # Mapare date bazată pe conținut
-                                if any(word in header for word in ['apă caldă', 'apa calda', 'apa', 'calda']):
-                                    self.data["stare_apa_calda"] = self._parse_status(value)
-                                elif any(word in header for word in ['căldură', 'caldura', 'caldura', 'încălzire']):
-                                    self.data["stare_caldura"] = self._parse_status(value)
-                                elif any(word in header for word in ['cauză', 'cauza', 'motiv', 'cauze']):
-                                    self.data["cauza"] = value
-                                elif any(word in header for word in ['descriere', 'detalii', 'explicație']):
-                                    self.data["descriere"] = value
-                                elif any(word in header for word in ['data', 'estimare', 'programare', 'reparatie']):
-                                    self.data["data_estimare"] = value
-                    
-                    # Încearcă să extragi informații din div-uri
-                    else:
-                        # Caută text structurat în div-uri
-                        div_text = element.get_text()
-                        lines = div_text.split('\n')
-                        for line in lines:
-                            line = line.strip()
-                            if ':' in line:
-                                parts = line.split(':', 1)
-                                if len(parts) == 2:
-                                    header = parts[0].strip().lower()
-                                    value = parts[1].strip()
-                                    
-                                    if any(word in header for word in ['apă caldă', 'apa calda']):
-                                        self.data["stare_apa_calda"] = self._parse_status(value)
-                                    elif any(word in header for word in ['căldură', 'caldura']):
-                                        self.data["stare_caldura"] = self._parse_status(value)
-                                    elif any(word in header for word in ['cauză', 'cauza']):
-                                        self.data["cauza"] = value
-                                    elif any(word in header for word in ['descriere']):
-                                        self.data["descriere"] = value
-                                    elif any(word in header for word in ['data', 'estimare']):
-                                        self.data["data_estimare"] = value
-                                
-        except Exception as e:
-            _LOGGER.error("Eroare la parsarea HTML-ului: %s", e)
-
-    def _parse_status(self, text):
-        """Parsează textul pentru a determina starea."""
-        if not text:
-            return "Necunoscut"
-            
-        text_lower = text.lower()
-        if any(word in text_lower for word in ['oprit', 'stop', 'întrerupt', 'intrerupt', 'suspendat', 'avarie']):
-            return "Oprită"
-        elif any(word in text_lower for word in ['funcțiune', 'funcţiune', 'funcțiune', 'activ', 'normal', 'funcționează']):
-            return "Funcționează"
-        else:
-            return text
-
-class CMTEBSensor(SensorEntity):
-    """Reprezentare senzor generic CMTEB."""
-    
-    def __init__(self, api, street, punct_termic, sensor_type, sensor_name):
-        """Initialize."""
-        self._api = api
-        self._street = street
-        self._punct_termic = punct_termic
-        self._sensor_type = sensor_type
-        self._attr_name = f"CMTEB {sensor_name} {street}"
-        self._attr_unique_id = f"cmteb_{sensor_type}_{street}_{punct_termic}"
-        self._state = None
-
-    @property
-    def state(self):
-        """Returnare stare."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self):
-        """Atribute suplimentare."""
+                interruption = {
+                    'strada': self._entry.data[CONF_STRADA],
+                    'serviciu': self._extract_service_type(section),
+                    'cauza': self._extract_cause(section),
+                    'descriere': self._clean_text(section)[:200],
+                    'data_estimata': self._extract_estimated_date(section),
+                    'ora_estimata': self._extract_estimated_time(section),
+                    'detectat_la': dt_util.now().isoformat()
+                }
+                
+                interruptions.append(interruption)
+        
         return {
-            "strada": self._street,
-            "punct_termic": self._punct_termic,
-            "tip_senzor": self._sensor_type
+            'interruptions': interruptions,
+            'total_gasite': len(interruptions),
+            'ultima_actualizare': dt_util.now().isoformat()
         }
 
-    async def async_update(self):
-        """Actualizare senzor."""
-        await self._api.async_update()
-        self._state = self._api.data.get(self._sensor_type, "Necunoscut")
+    def _extract_service_type(self, text: str) -> str:
+        """Extract service type from text."""
+        text_lower = text.lower()
+        if 'apă caldă' in text_lower:
+            return "Apă caldă"
+        elif 'căldură' in text_lower or 'încălzire' in text_lower:
+            return "Căldură"
+        return "Serviciu termic"
 
-class CMTEBStatusSensor(CMTEBSensor):
-    """Senzor specializat pentru stări (apă caldă/căldură)."""
+    def _extract_cause(self, text: str) -> str:
+        """Extract cause from text."""
+        cause_patterns = [
+            r'(?:cauză|motiv)[:\s]*([^\.\n]+)',
+            r'datorită[\s]*([^\.\n]+)',
+            r'pentru[\s]*([^\.\n]+)'
+        ]
+        
+        for pattern in cause_patterns:
+            match = re.search(pattern, text, re.IGNORECASE)
+            if match:
+                return self._clean_text(match.group(1))
+        
+        return "Nespecificat"
+
+    def _extract_estimated_date(self, text: str) -> str:
+        """Extract estimated date from text."""
+        date_patterns = [
+            r'(\d{1,2}[\.\/]\d{1,2}[\.\/]\d{4})',
+            r'(\d{1,2}\s+[a-zA-Z]+\s+\d{4})',
+            r'până[\s\S]{1,30}?(\d{1,2}[\.\/]\d{1,2})'
+        ]
+        
+        for pattern in date_patterns:
+            match = re.search(pattern, text)
+            if match:
+                return match.group(1)
+        
+        return "Nespecificat"
+
+    def _extract_estimated_time(self, text: str) -> str:
+        """Extract estimated time from text."""
+        time_pattern = r'(\d{1,2}:\d{2})'
+        match = re.search(time_pattern, text)
+        return match.group(1) if match else "Nespecificat"
+
+    def _clean_text(self, text: str) -> str:
+        """Clean HTML tags and extra spaces from text."""
+        clean = re.sub(r'<[^>]+>', '', text)
+        clean = re.sub(r'\s+', ' ', clean)
+        return clean.strip()
+
+    async def _update_sensor_state(self):
+        """Update sensor state based on parsed data."""
+        # De implementat by child classes
+        pass
+
+class TermoApaCaldaSensor(TermoBaseSensor):
+    """Sensor for hot water interruptions."""
     
-    @property
-    def icon(self):
-        """Iconiță bazată pe stare."""
-        if self._state == "Oprită":
-            return "mdi:alert-octagram"
-        elif self._state == "Funcționează":
-            return "mdi:check-circle"
+    def __init__(self, entry: ConfigEntry):
+        super().__init__(entry)
+        self._attr_name = f"Termo Apă Caldă - {entry.data[CONF_STRADA]}"
+        self._attr_unique_id = f"termo_apa_calda_{entry.entry_id}"
+        self._attr_icon = "mdi:water-thermometer"
+        self._attr_native_value = "Necunoscut"
+
+    async def _update_sensor_state(self):
+        """Update hot water sensor state."""
+        interruptions = self._interruption_data.get('interruptions', [])
+        apa_calda_interruptions = [
+            i for i in interruptions 
+            if i['serviciu'] in ['Apă caldă', 'Serviciu termic']
+        ]
+        
+        if apa_calda_interruptions:
+            self._attr_native_value = "Întrerupt"
+            latest = apa_calda_interruptions[0]
+            self._attr_extra_state_attributes = {
+                'cauza': latest['cauza'],
+                'descriere': latest['descriere'],
+                'data_estimata': latest['data_estimata'],
+                'ora_estimata': latest['ora_estimata'],
+                'detectat_la': latest['detectat_la'],
+                'numar_intreruperi': len(apa_calda_interruptions)
+            }
         else:
-            return "mdi:help-circle"
+            self._attr_native_value = "Normal"
+            self._attr_extra_state_attributes = {
+                'ultima_verificare': self._last_update.isoformat() if self._last_update else None
+            }
+
+class TermoCalduraSensor(TermoBaseSensor):
+    """Sensor for heating interruptions."""
+    
+    def __init__(self, entry: ConfigEntry):
+        super().__init__(entry)
+        self._attr_name = f"Termo Căldură - {entry.data[CONF_STRADA]}"
+        self._attr_unique_id = f"termo_caldura_{entry.entry_id}"
+        self._attr_icon = "mdi:radiator"
+        self._attr_native_value = "Necunoscut"
+
+    async def _update_sensor_state(self):
+        """Update heating sensor state."""
+        interruptions = self._interruption_data.get('interruptions', [])
+        caldura_interruptions = [
+            i for i in interruptions 
+            if i['serviciu'] in ['Căldură', 'Serviciu termic']
+        ]
+        
+        if caldura_interruptions:
+            self._attr_native_value = "Întrerupt"
+            latest = caldura_interruptions[0]
+            self._attr_extra_state_attributes = {
+                'cauza': latest['cauza'],
+                'descriere': latest['descriere'],
+                'data_estimata': latest['data_estimata'],
+                'ora_estimata': latest['ora_estimata'],
+                'detectat_la': latest['detectat_la'],
+                'numar_intreruperi': len(caldura_interruptions)
+            }
+        else:
+            self._attr_native_value = "Normal"
+            self._attr_extra_state_attributes = {
+                'ultima_verificare': self._last_update.isoformat() if self._last_update else None
+            }
+
+class TermoStatusGeneralSensor(TermoBaseSensor):
+    """General status sensor."""
+    
+    def __init__(self, entry: ConfigEntry):
+        super().__init__(entry)
+        self._attr_name = f"Termo Status - {entry.data[CONF_STRADA]}"
+        self._attr_unique_id = f"termo_status_{entry.entry_id}"
+        self._attr_icon = "mdi:home-analytics"
+        self._attr_native_value = "Necunoscut"
+
+    async def _update_sensor_state(self):
+        """Update general status sensor."""
+        interruptions = self._interruption_data.get('interruptions', [])
+        
+        if interruptions:
+            self._attr_native_value = "Întreruperi active"
+            self._attr_icon = "mdi:alert-circle-outline"
+        else:
+            self._attr_native_value = "Normal"
+            self._attr_icon = "mdi:check-circle-outline"
+        
+        self._attr_extra_state_attributes = {
+            'total_intreruperi': len(interruptions),
+            'ultima_actualizare': self._last_update.isoformat() if self._last_update else None,
+            'strada': self._entry.data[CONF_STRADA]
+        }
+
+class TermoCauzaSensor(TermoBaseSensor):
+    """Sensor for interruption cause."""
+    
+    def __init__(self, entry: ConfigEntry):
+        super().__init__(entry)
+        self._attr_name = f"Termo Cauză - {entry.data[CONF_STRADA]}"
+        self._attr_unique_id = f"termo_cauza_{entry.entry_id}"
+        self._attr_icon = "mdi:alert-circle"
+        self._attr_native_value = "Nicio întrerupere"
+
+    async def _update_sensor_state(self):
+        """Update cause sensor."""
+        interruptions = self._interruption_data.get('interruptions', [])
+        
+        if interruptions:
+            latest = interruptions[0]
+            self._attr_native_value = latest['cauza']
+            self._attr_extra_state_attributes = {
+                'descriere_completa': latest['descriere'],
+                'serviciu_afectat': latest['serviciu'],
+                'data_estimata': latest['data_estimata'],
+                'ora_estimata': latest['ora_estimata']
+            }
+        else:
+            self._attr_native_value = "Nicio întrerupere"
+            self._attr_extra_state_attributes = {}
+
+class TermoDataEstimataSensor(TermoBaseSensor):
+    """Sensor for estimated restoration time."""
+    
+    def __init__(self, entry: ConfigEntry):
+        super().__init__(entry)
+        self._attr_name = f"Termo Data Estimă - {entry.data[CONF_STRADA]}"
+        self._attr_unique_id = f"termo_data_estima_{entry.entry_id}"
+        self._attr_icon = "mdi:clock-alert"
+        self._attr_native_value = "Nespecificat"
+
+    async def _update_sensor_state(self):
+        """Update estimated time sensor."""
+        interruptions = self._interruption_data.get('interruptions', [])
+        
+        if interruptions:
+            latest = interruptions[0]
+            data_ora = f"{latest['data_estimata']} {latest['ora_estimata']}".strip()
+            self._attr_native_value = data_ora if data_ora != "Nespecificat" else "În curs"
+            self._attr_extra_state_attributes = {
+                'serviciu': latest['serviciu'],
+                'cauza': latest['cauza']
+            }
+        else:
+            self._attr_native_value = "Nespecificat"
+            self._attr_extra_state_attributes = {}
