@@ -1,33 +1,31 @@
 """Config flow for Termo Bucuresti."""
 from homeassistant import config_entries
 import voluptuous as vol
+from .const import (
+    DOMAIN, CONF_STRADA, CONF_PUNCT_TERMIC, CONF_SECTOR, 
+    CONF_UPDATE_INTERVAL, PUNCTE_TERMICE, SECTORI, DEFAULT_UPDATE_INTERVAL
+)
 
-class ConfigFlow(config_entries.ConfigFlow, domain="termo_bucuresti"):
-    """Config flow."""
+class TermoBucurestiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Termo Bucuresti."""
     
     VERSION = 1
 
     async def async_step_user(self, user_input=None):
-        """Handle user step."""
-        errors = {}
-        
+        """Handle the initial step."""
         if user_input is not None:
-            await self.async_set_unique_id(
-                f"termo_{user_input['strada'].lower().replace(' ', '_')}"
-            )
-            self._abort_if_unique_id_configured()
-            
             return self.async_create_entry(
-                title=f"Termo - {user_input['strada']}",
+                title=f"Termo - {user_input[CONF_STRADA]}",
                 data=user_input
             )
 
         schema = vol.Schema({
-            vol.Required("strada"): str,
+            vol.Required(CONF_STRADA): str,
+            vol.Required(CONF_PUNCT_TERMIC, default="toate"): vol.In(PUNCTE_TERMICE),
+            vol.Required(CONF_SECTOR, default="toate"): vol.In(SECTORI),
+            vol.Required(CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): vol.All(
+                vol.Coerce(int), vol.Range(min=5, max=120)
+            ),
         })
-        
-        return self.async_show_form(
-            step_id="user", 
-            data_schema=schema, 
-            errors=errors
-        )
+
+        return self.async_show_form(step_id="user", data_schema=schema)
