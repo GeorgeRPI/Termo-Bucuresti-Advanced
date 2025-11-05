@@ -12,7 +12,7 @@ Monitorizare avansată a întreruperilor la apă caldă și căldură de la CMTE
 
 ## Instalare
 
-1. Adaugă în HACS: `https://github.com/username/termo_bucuresti_advanced`
+1. Adaugă în HACS: `https://github.com/GeorgeRPI/termo_bucuresti_advanced`
 2. Instalează integrarea
 3. Restartează Home Assistant
 4. Configurează din interfața web
