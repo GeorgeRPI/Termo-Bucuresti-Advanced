@@ -40,3 +40,18 @@ cards:
       - sensor.termo_apa_calda_strada
       - sensor.termo_caldura_strada
     hours_to_show: 24
+
+## Notificare la Întrerupere
+alias: "Notificare întrerupere termică"
+trigger:
+  platform: state
+  entity_id: binary_sensor.termo_alerta_generala_strada
+  to: "on"
+action:
+  service: notify.mobile_app_telefon
+  data:
+    title: "⚠️ Întrerupere servicii termice"
+    message: >-
+      S-a detectat o întrerupere la {{ state_attr('binary_sensor.termo_alerta_generala_strada', 'serviciu_afectat') }}.
+      Cauză: {{ state_attr('binary_sensor.termo_alerta_generala_strada', 'cauza') }}
+      Estimare reparare: {{ state_attr('binary_sensor.termo_alerta_generala_strada', 'data_estimata') }} {{ state_attr('binary_sensor.termo_alerta_generala_strada', 'ora_estimata') }}
