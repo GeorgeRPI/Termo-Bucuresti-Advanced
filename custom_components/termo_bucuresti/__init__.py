@@ -18,19 +18,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Termo Bucuresti from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     
-    # Store configuration
+    # Configurarea magazinului
     hass.data[DOMAIN][entry.entry_id] = {
         "config": entry.data,
         "options": entry.options
     }
     
-    # Set up platforms
+    # Configurați platforme
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     
-    # Setup services
+    # Servicii de configurare
     await _setup_services(hass)
     
-    # Add update listener
+    # Adăugați un ascultător de actualizări
     entry.async_on_unload(entry.add_update_listener(_async_update_options))
     
     _LOGGER.info(
@@ -74,7 +74,7 @@ async def _setup_services(hass: HomeAssistant):
         period = call.data.get("period", "7days")
         _LOGGER.info("Generare raport pentru perioada: %s", period)
         
-        # Calculate period
+        # Calculați perioada
         if period == "1day":
             days = 1
         elif period == "7days":
@@ -92,7 +92,7 @@ async def _setup_services(hass: HomeAssistant):
             }
         }
         
-        # In a real implementation, this would collect data from all entities
+        # Într-o implementare reală, aceasta ar colecta date de la toate entitățile
         hass.bus.async_fire("termo_bucuresti_report_generated", report_data)
         
     async def async_handle_export_data(call):
@@ -100,9 +100,9 @@ async def _setup_services(hass: HomeAssistant):
         export_format = call.data.get("format", "json")
         _LOGGER.info("Export date în format: %s", export_format)
         
-        # Export logic would go here
+        # Logica de export ar trebui introdusă aic
         
-    # Register services
+    # Servicii de înregistrare
     hass.services.async_register(DOMAIN, "refresh_data", async_handle_refresh_data)
     hass.services.async_register(DOMAIN, "get_report", async_handle_get_report)
     hass.services.async_register(DOMAIN, "export_data", async_handle_export_data)
