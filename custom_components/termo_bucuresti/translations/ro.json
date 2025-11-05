@@ -1,0 +1,24 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configurare Termo Bucuresti",
+        "description": "Configurează monitorizarea întreruperilor la apă caldă și căldură",
+        "data": {
+          "strada": "Stradă",
+          "punct_termic": "Punct termic",
+          "sector": "Sector",
+          "update_interval": "Interval actualizare (minute)"
+        }
+      }
+    },
+    "error": {
+      "invalid_street": "Numele străzii este invalid",
+      "cannot_connect": "Nu se poate conecta la CMTEB",
+      "unknown": "Eroare necunoscută"
+    },
+    "abort": {
+      "already_configured": "Această stradă este deja configurată"
+    }
+  }
+}
