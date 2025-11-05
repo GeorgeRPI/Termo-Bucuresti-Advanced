@@ -1,0 +1,50 @@
+refresh_data:
+  name: Reîmprospătează datele
+  description: Forțează reîmprospătarea datelor de la CMTEB
+  fields:
+    entity_id:
+      name: Entitate
+      description: Entitatea de reîmprospătat (lasă gol pentru toate)
+      required: false
+      selector:
+        entity:
+          domain:
+            - sensor
+            - binary_sensor
+          integration: termo_bucuresti
+
+get_report:
+  name: Obține raport
+  description: Generează un raport detaliat despre întreruperi
+  fields:
+    period:
+      name: Perioadă
+      description: Perioada pentru raport
+      required: false
+      default: "7days"
+      selector:
+        select:
+          options:
+            - label: "Ultimele 24 de ore"
+              value: "1day"
+            - label: "Ultimele 7 zile"
+              value: "7days"
+            - label: "Ultimele 30 de zile"
+              value: "30days"
+
+export_data:
+  name: Exportă date
+  description: Exportă datele despre întreruperi
+  fields:
+    format:
+      name: Format
+      description: Formatul de export
+      required: false
+      default: "json"
+      selector:
+        select:
+          options:
+            - label: "JSON"
+              value: "json"
+            - label: "CSV"
+              value: "csv"
