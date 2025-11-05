@@ -69,7 +69,7 @@ class TermoBaseSensor(SensorEntity):
         strada_cautata = self._entry.data[CONF_STRADA].lower()
         interruptions = []
         
-        # Patterns for different interruption types
+        # Modele pentru diferite tipuri de întreruperi
         patterns = {
             'zona': r'(?:zona|sector|cartier|strada)[\s\S]{1,100}?' + re.escape(strada_cautata),
             'serviciu': r'(?:apă caldă|căldură|încălzire|serviciu termic)',
@@ -78,13 +78,13 @@ class TermoBaseSensor(SensorEntity):
             'ora_estimata': r'(?:ora|la)[\s]*(\d{1,2}:\d{2})'
         }
         
-        # Split HTML into sections that might contain interruption info
+        # Împărțiți HTML-ul în secțiuni care ar putea conține informații despre întreruperi
         sections = re.split(r'</?div|</?tr|</?p|</?li', html)
         
         for section in sections:
             section_lower = section.lower()
             
-            # Check if section contains the street name and service keywords
+            # Verificați dacă secțiunea conține numele străzii și cuvintele cheie pentru servicii
             if (strada_cautata in section_lower and 
                 any(keyword in section_lower for keyword in ['apă', 'caldă', 'căldură', 'termic'])):
                 
@@ -159,7 +159,7 @@ class TermoBaseSensor(SensorEntity):
 
     async def _update_sensor_state(self):
         """Update sensor state based on parsed data."""
-        # To be implemented by child classes
+        # De implementat by child classes
         pass
 
 class TermoApaCaldaSensor(TermoBaseSensor):
