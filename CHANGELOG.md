@@ -2,7 +2,7 @@
 
 Toate modificările importante la acest proiect vor fi documentate în acest fișier.
 
-## [2.0.0] - 5-11-2025
+## [5.11.2025]
 
 ### Adăugat
 - Integrare completă cu HACS
