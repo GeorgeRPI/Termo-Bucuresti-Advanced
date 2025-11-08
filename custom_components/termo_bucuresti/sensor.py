@@ -292,7 +292,7 @@ class TermoDataEstimataSensor(TermoBaseSensor):
     def __init__(self, entry: ConfigEntry):
         super().__init__(entry)
         self._attr_name = f"Termo Data Estimată - {entry.data[CONF_STRADA]}"
-        self._attr_unique_id = f"termo_data_estima_{entry.entry_id}"
+        self._attr_unique_id = f"termo_data_estimata_{entry.entry_id}"
         self._attr_icon = "mdi:clock-alert"
         self._attr_native_value = "Nespecificat"
 
