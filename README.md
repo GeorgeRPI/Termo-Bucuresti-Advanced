@@ -1,6 +1,6 @@
 ## 🏠 Compania Municipală Termoenergetica București - Integrare pentru HomeAssistant
 
-![Version](https://img.shields.io/badge/version-v5.11.2025-blue)
+![Version](https://img.shields.io/badge/version-v.5.11.2025-blue)
 ![hacs](https://img.shields.io/badge/HACS-Custom-orange.svg)
 
 Monitorizare avansată a întreruperilor la apă caldă și căldură de la CMTEB București.
