@@ -1,11 +1,11 @@
-## 🏠 Compania Municipală Termoenergetica București - Integrare pentru HomeAssistant
+# 🏠 Compania Municipală Termoenergetica București - Integrare pentru HomeAssistant
 
 ![Version](https://img.shields.io/badge/version-v1.0.0-blue)
 ![hacs](https://img.shields.io/badge/HACS-Custom-orange.svg)
 
 Monitorizare avansată a întreruperilor la apă caldă și căldură de la CMTEB București.
 
-##  🌟 Caracteristici
+#  🌟 Caracteristici
 
 - ✅ 🔍 Monitorizare în timp real a întreruperilor
 - ✅ 🔍 Detalii complete: cauză, descriere, dată estimată pentru reparare
@@ -13,7 +13,7 @@ Monitorizare avansată a întreruperilor la apă caldă și căldură de la CMTE
 - ✅ Notificări automate
 - ✅ Statistici și istoric
 
-## 🚀 Instalare
+# 🚀 Instalare
 
 1. Adaugă în HACS (cele trei puncte din dreapta sus/Repozitorii non-standard): `https://github.com/GeorgeRPI/termo_bucuresti_advanced`
 2. Instalează integrarea: Termo Bucuresti Advanced
@@ -21,28 +21,25 @@ Monitorizare avansată a întreruperilor la apă caldă și căldură de la CMTE
 4. Configurează din interfața web
 
 
-## 🔍 Card - Dashboard:
-type: vertical-stack
-cards:
-  - type: glance
-    entities:
-      - entity: sensor.termo_status_strada
-        name: Stare generală
-      - entity: sensor.termo_apa_calda_strada
-        name: Apă caldă
-      - entity: sensor.termo_caldura_strada
-        name: Căldură
-  - type: entities
-    entities:
-      - entity: sensor.termo_cauza_strada
-        name: Cauză
-      - entity: sensor.termo_data_estima_strada
-        name: Estimare reparare
-  - type: history-graph
-    entities:
-      - sensor.termo_apa_calda_strada
-      - sensor.termo_caldura_strada
-    hours_to_show: 24
+# 🔍 Card - Dashboard:
+## Card stare curentă
+type: glance
+  - entities:
+    - entity: sensor.termo_status_strada
+    - entity: sensor.termo_apa_strada
+    - entity: sensor.termo_caldura_strada
+
+## Card statistici
+  - type: statistic
+    - entity: sensor.termo_statistici_strada
+    - chart_type: line
+
+## Card istoric
+type: history-graph
+  - entities:
+    - sensor.termo_apa_strada
+    - sensor.termo_caldura_strada
+    - hours_to_show: 24
 
 ## ✨ Exemple de utilizare
 
