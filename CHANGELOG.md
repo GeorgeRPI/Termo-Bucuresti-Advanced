@@ -2,7 +2,11 @@
 
 Toate modificările importante la acest proiect vor fi documentate în acest fișier.
 
-## [5.11.2025]
+## [v.9.11.2025]
+
+
+
+## [v.5.11.2025]
 
 ### Adăugat
 - Integrare completă cu HACS
@@ -25,7 +29,7 @@ Toate modificările importante la acest proiect vor fi documentate în acest fi�
 - Dependințe externe
 - Configurație obligatorie prin YAML
 
-## [1.0.0] - 4-11-2025
+## [v.4.11.2025]
 
 ### Adăugat
 - Versiunea inițială a integrării
