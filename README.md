@@ -1,4 +1,4 @@
-# Termo Bucuresti Advanced pentru Home Assistant
+## Termo Bucuresti Advanced
 
 ![Version](https://img.shields.io/badge/version-v1.0.0-blue)
 ![hacs](https://img.shields.io/badge/HACS-Custom-orange.svg)
@@ -16,7 +16,7 @@ Monitorizare avansată a întreruperilor la apă caldă și căldură de la CMTE
 ## 🚀 Instalare
 
 1. Adaugă în HACS (cele trei puncte din dreapta sus/Repozitorii non-standard): `https://github.com/GeorgeRPI/termo_bucuresti_advanced`
-2. Instalează integrarea - ## Termo Bucuresti Advanced
+2. Instalează integrarea: Termo Bucuresti Advanced
 3. Restartează Home Assistant
 4. Configurează din interfața web
 
