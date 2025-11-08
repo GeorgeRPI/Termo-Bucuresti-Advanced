@@ -2,7 +2,7 @@
 
 Toate modificările importante la acest proiect vor fi documentate în acest fișier.
 
-## [2.0.0] - 4-11-2025
+## [2.0.0] - 5-11-2025
 
 ### Adăugat
 - Integrare completă cu HACS
@@ -25,9 +25,10 @@ Toate modificările importante la acest proiect vor fi documentate în acest fi�
 - Dependințe externe
 - Configurație obligatorie prin YAML
 
-## [1.0.0] - 2
+## [1.0.0] - 4-11-2025
 
 ### Adăugat
 - Versiunea inițială a integrării
 - Monitorizare bazică a întreruperilor
 - 2 senzori simpli (apă caldă și căldură)
+- https://github.com/GeorgeRPI/termo_bucuresti_homeassistant.git
