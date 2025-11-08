@@ -2,7 +2,7 @@
 ## 📄 **12. info.md**
 ```markdown
 ---
-name: Termo Bucuresti Advanced
+name: Termo Bucuresti Advanced v.5.11.2025
 description: Monitorizare a întreruperilor de apă caldă și căldură - Termoenergetica Bucuresti
 content_in_root: false
 hide_default_branch: true
