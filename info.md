@@ -10,7 +10,7 @@ hide_default_branch: true
 
 # Termo Bucuresti Advanced
 
-## Monitorizare Inteligentă a Serviciilor Termice
+## Monitorizare - Compania Municipală Termoenergetica București
 
 Această integrare oferă monitorizare în timp real a întreruperilor la apă caldă și căldură pentru locuitorii Bucureștiului, cu extragere automată a informațiilor detaliate de pe site-ul CMTEB.
 
