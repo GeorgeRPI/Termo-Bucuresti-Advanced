@@ -4,7 +4,7 @@
   "version": "2.0.0",
   "config_flow": true,
   "dependencies": [],
-  "codeowners": ["@George"],
+  "codeowners": ["@GeorgeRPI"],
   "documentation": "https://github.com/GeorgeRPI/termo_bucuresti_advanced",
   "integration_type": "service",
   "iot_class": "cloud_polling",
