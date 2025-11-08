@@ -56,7 +56,6 @@ cards:
       - service: notify.mobile_app_telefon
     data:
       - title: "⚠️ Întrerupere servicii termice"
-    message: >-
-      S-a detectat o întrerupere la {{ state_attr('binary_sensor.termo_alerta_generala_strada', 'serviciu_afectat') }}.
-      Cauză: {{ state_attr('binary_sensor.termo_alerta_generala_strada', 'cauza') }}
-      Estimare reparare: {{ state_attr('binary_sensor.termo_alerta_generala_strada', 'data_estimata') }} {{ state_attr('binary_sensor.termo_alerta_generala_strada',          'ora_estimata') }}
+    message: >- S-a detectat o întrerupere la {{ state_attr('binary_sensor.termo_alerta_generala_strada', 'serviciu_afectat') }}.
+      - Cauză: {{ state_attr('binary_sensor.termo_alerta_generala_strada', 'cauza') }}
+      - Estimare reparare: {{ state_attr('binary_sensor.termo_alerta_generala_strada', 'data_estimata') }} {{ state_attr('binary_sensor.termo_alerta_generala_strada',          'ora_estimata') }}
