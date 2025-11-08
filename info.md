@@ -37,4 +37,4 @@ Această integrare oferă monitorizare în timp real a întreruperilor la apă c
 3. Restartează Home Assistant
 4. Configurează din interfața web
 
-[Vezi documentația completă pentru detalii](https://github.com/username/termo_bucuresti_advanced)
+[Vezi documentația completă pentru detalii](https://github.com/GeorgeRPI/termo_bucuresti_advanced)
