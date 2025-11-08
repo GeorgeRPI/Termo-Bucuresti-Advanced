@@ -1,5 +1,8 @@
 # Termo Bucuresti Advanced pentru Home Assistant
 
+![Version](https://img.shields.io/badge/version-v1.0.0-blue)
+![hacs](https://img.shields.io/badge/HACS-Custom-orange.svg)
+
 Monitorizare avansată a întreruperilor la apă caldă și căldură de la CMTEB București.
 
 ## Caracteristici
