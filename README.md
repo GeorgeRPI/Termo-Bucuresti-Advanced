@@ -1,4 +1,4 @@
-## Termo Bucuresti Advanced
+## 🏠 Compania Municipală Termoenergetica București - Integrare pentru HomeAssistant
 
 ![Version](https://img.shields.io/badge/version-v1.0.0-blue)
 ![hacs](https://img.shields.io/badge/HACS-Custom-orange.svg)
