@@ -5,23 +5,23 @@
 
 Monitorizare avansată a întreruperilor la apă caldă și căldură de la CMTEB București.
 
-## Caracteristici
+##  🌟 Caracteristici
 
-- ✅ Monitorizare în timp real a întreruperilor
-- ✅ Detalii complete: cauză, descriere, dată estimată pentru reparare
+- ✅ 🔍 Monitorizare în timp real a întreruperilor
+- ✅ 🔍 Detalii complete: cauză, descriere, dată estimată pentru reparare
 - ✅ Filtrare după stradă și punct termic
 - ✅ Notificări automate
 - ✅ Statistici și istoric
 
-## Instalare
+## 🚀 Instalare
 
-1. Adaugă în HACS: `https://github.com/GeorgeRPI/termo_bucuresti_advanced`
+1. Adaugă în HACS (cele trei puncte din dreapta sus/Repozitorii non-standard): `https://github.com/GeorgeRPI/termo_bucuresti_advanced`
 2. Instalează integrarea
 3. Restartează Home Assistant
 4. Configurează din interfața web
 
 
-## Card - Dashboard Personalizat
+## 🔍 Card - Dashboard:
 type: vertical-stack
 cards:
   - type: glance
@@ -43,6 +43,8 @@ cards:
       - sensor.termo_apa_calda_strada
       - sensor.termo_caldura_strada
     hours_to_show: 24
+
+## ✨ Exemple de utilizare
 
 ### 🔔 Automatizare pentru Întrerupere termică
   - alias: "Notificare întrerupere termică"
